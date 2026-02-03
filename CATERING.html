@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Catering Reservation and Ordering System</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f4f6f9;
+    }
+
+    header {
+      background: linear-gradient(90deg, #ff512f, #dd2476);
+      color: white;
+      padding: 20px;
+      font-size: 26px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2, h3 {
+      color: #dd2476;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 5px;
+    }
+
+    input, select, textarea, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      background: #dd2476;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #c81f64;
+    }
+
+    .row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .col {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: #fafafa;
+    }
+
+    .log {
+      background: #000;
+      color: #0f0;
+      padding: 10px;
+      height: 180px;
+      overflow-y: auto;
+      font-size: 12px;
+      border-radius: 5px;
+    }
+
+    .topbar {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      background: #ff512f;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    .danger {
+      background: #e74c3c;
+    }
+
+    .success {
+      background: #27ae60;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  Catering Reservation and Ordering System
+</header>
+
+<div class="container">
+
+  <!-- AUTH -->
+  <div id="authSection">
+    <h2>Login / Register</h2>
+    <div class="row">
+      <div class="col">
+        <select id="role">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <button onclick="register()">Register</button>
+      </div>
+      <div class="col">
+        <p><b>Demo Accounts:</b></p>
+        <p>User → user / 1234</p>
+        <p>Admin → admin / 1234</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER DASHBOARD -->
+  <div id="userSection" class="hidden">
+    <div class="topbar">
+      Logged in as <b id="userNameLabel"></b>
+      <button onclick="logout()" style="width:auto;">Logout</button>
+    </div>
+
+    <h2>User Dashboard</h2>
+
+    <div class="row">
+
+      <!-- PRODUCTS -->
+      <div class="col">
+        <h3>Available Catering Products</h3>
+        <div id="productList"></div>
+      </div>
+
+      <!-- CART -->
+      <div class="col">
+        <h3>My Cart <span class="badge" id="cartCount">0</span></h3>
+        <div id="cartList"></div>
+        <h4>Total: ₹<span id="totalAmount">0</span></h4>
+        <button onclick="openOrderForm()">Proceed to Checkout</button>
+      </div>
+
+    </div>
+
+    <!-- MY ORDERS -->
+    <h3>My Orders</h3>
+    <div id="myOrders"></div>
+  </div>
+
+  <!-- ORDER FORM -->
+  <div id="orderFormSection" class="hidden">
+    <h2>Enter Delivery & Payment Details</h2>
+
+    <div class="row">
+      <div class="col">
+        <input type="text" id="custName" placeholder="Full Name">
+        <input type="text" id="custPhone" placeholder="Phone Number">
+        <input type="text" id="custAltPhone" placeholder="Alternate Phone">
+        <input type="email" id="custEmail" placeholder="Email Address">
+      </div>
+      <div class="col">
+        <textarea id="custAddress" placeholder="Delivery Address"></textarea>
+        <input type="date" id="deliveryDate">
+        <select id="paymentMethod">
+          <option value="">Select Payment Method</option>
+          <option value="Cash On Delivery">Cash On Delivery</option>
+          <option value="UPI">UPI</option>
+          <option value="Card">Card</option>
+        </select>
+      </div>
+    </div>
+
+    <button onclick="confirmOrder()">Confirm & Place Order</button>
+    <button onclick="backToDashboard()" class="danger">Cancel</button>
+  </div>
+
+  <!-- ADMIN DASHBOARD -->
+  <div id="adminSection" class="hidden">
+    <div class="topbar">
+      Logged in as <b>Admin</b>
+      <button onclick="logout()" style="width:auto;">Logout</button>
+    </div>
+
+    <h2>Admin Dashboard</h2>
+
+    <div class="row">
+
+      <div class="col">
+        <h3>Add Product</h3>
+        <input type="text" id="pname" placeholder="Product Name">
+        <input type="number" id="pprice" placeholder="Price">
+        <select id="pcategory">
+          <option>Breakfast</option>
+          <option>Lunch</option>
+          <option>Dinner</option>
+          <option>Snacks</option>
+        </select>
+        <button onclick="addProduct()">Add Product</button>
+
+        <h3>All Products</h3>
+        <div id="adminProductList"></div>
+      </div>
+
+      <div class="col">
+        <h3>All Orders</h3>
+        <div id="orderList"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LOGS -->
+  <h2>System Logs</h2>
+  <div class="log" id="logBox"></div>
+
+</div>
+
+<script>
+/* ------------------ DATA ------------------ */
+
+let users = [
+  { username: "user", password: "1234", role: "user" },
+  { username: "admin", password: "1234", role: "admin" }
+];
+
+let products = [
+  { name: "South Indian Breakfast Combo", price: 120, category: "Breakfast", items: ["Idli", "Vada", "Sambar", "Chutney", "Coffee"], qty: 0 },
+  { name: "Veg Lunch Full Meals", price: 180, category: "Lunch", items: ["Rice", "Sambar", "Rasam", "Poriyal", "Curd", "Papad"], qty: 0 },
+  { name: "Non-Veg Briyani Combo", price: 220, category: "Lunch", items: ["Chicken Biryani", "Brinjal Curry", "Raita", "Egg", "Sweet"], qty: 0 },
+  { name: "Evening Snacks Box", price: 90, category: "Snacks", items: ["Samosa", "Bajji", "Tea"], qty: 0 },
+  { name: "Dinner Chapati Set", price: 150, category: "Dinner", items: ["Chapati", "Paneer Curry", "Dal", "Salad"], qty: 0 }
+];
+
+let cart = [];
+let orders = [];
+
+let currentUser = null;
+let currentRole = null;
+
+/* ------------------ LOGGING ------------------ */
+
+function log(message) {
+  const time = new Date().toLocaleTimeString();
+  document.getElementById("logBox").innerHTML += `[${time}] ${message}<br>`;
+}
+
+/* ------------------ AUTH ------------------ */
+
+function register() {
+  const username = usernameInput();
+  const password = passwordInput();
+  const role = roleInput();
+
+  users.push({ username, password, role });
+  log(`Registered new ${role}: ${username}`);
+  alert("Registered successfully!");
+}
+
+function login() {
+  const username = usernameInput();
+  const password = passwordInput();
+  const role = roleInput();
+
+  const user = users.find(u => u.username === username && u.password === password && u.role === role);
+
+  if (!user) {
+    alert("Invalid credentials");
+    return;
+  }
+
+  currentUser = username;
+  currentRole = role;
+
+  log(`${role} logged in: ${username}`);
+
+  document.getElementById("authSection").classList.add("hidden");
+
+  if (role === "user") {
+    document.getElementById("userSection").classList.remove("hidden");
+    document.getElementById("userNameLabel").innerText = username;
+    displayProducts();
+    displayCart();
+    displayMyOrders();
+  } else {
+    document.getElementById("adminSection").classList.remove("hidden");
+    displayAdminProducts();
+    displayOrders();
+  }
+}
+
+function logout() {
+  log(`${currentRole} logged out: ${currentUser}`);
+  currentUser = null;
+  currentRole = null;
+  cart = [];
+  products.forEach(p => p.qty = 0);
+
+  document.getElementById("authSection").classList.remove("hidden");
+  document.getElementById("userSection").classList.add("hidden");
+  document.getElementById("adminSection").classList.add("hidden");
+  document.getElementById("orderFormSection").classList.add("hidden");
+}
+
+/* ------------------ PRODUCTS ------------------ */
+
+function displayProducts() {
+  const list = document.getElementById("productList");
+  list.innerHTML = "";
+
+  products.forEach((p, index) => {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <b>${p.name}</b><br>
+      Category: ${p.category}<br>
+      Price: ₹${p.price}<br>
+      <small><b>Includes:</b> ${p.items.join(", ")}</small><br><br>
+
+      <button onclick="decreaseQty(${index})">-</button>
+      <span id="qty-${index}">${p.qty}</span>
+      <button onclick="increaseQty(${index})">+</button>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+function increaseQty(index) {
+  products[index].qty++;
+  updateCartFromProducts();
+  displayProducts();
+}
+
+function decreaseQty(index) {
+  if (products[index].qty > 0) {
+    products[index].qty--;
+    updateCartFromProducts();
+    displayProducts();
+  }
+}
+
+function updateCartFromProducts() {
+  cart = [];
+  products.forEach(p => {
+    for (let i = 0; i < p.qty; i++) cart.push(p);
+  });
+  displayCart();
+}
+
+function displayCart() {
+  const list = document.getElementById("cartList");
+  list.innerHTML = "";
+
+  let total = 0;
+  cart.forEach((c, i) => {
+    total += c.price;
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerText = `${i+1}. ${c.name} - ₹${c.price}`;
+    list.appendChild(div);
+  });
+
+  document.getElementById("cartCount").innerText = cart.length;
+  document.getElementById("totalAmount").innerText = total;
+}
+
+/* ------------------ ORDER FORM ------------------ */
+
+function openOrderForm() {
+  if (cart.length === 0) {
+    alert("Cart is empty");
+    return;
+  }
+  document.getElementById("userSection").classList.add("hidden");
+  document.getElementById("orderFormSection").classList.remove("hidden");
+}
+
+function backToDashboard() {
+  document.getElementById("orderFormSection").classList.add("hidden");
+  document.getElementById("userSection").classList.remove("hidden");
+}
+
+/* ------------------ PLACE ORDER ------------------ */
+
+function confirmOrder() {
+  const name = document.getElementById("custName").value;
+  const phone = document.getElementById("custPhone").value;
+  const altPhone = document.getElementById("custAltPhone").value;
+  const email = document.getElementById("custEmail").value;
+  const address = document.getElementById("custAddress").value;
+  const deliveryDate = document.getElementById("deliveryDate").value;
+  const payment = document.getElementById("paymentMethod").value;
+
+  if (!name || !phone || !address || !deliveryDate || !payment) {
+    alert("Please fill all required details");
+    return;
+  }
+
+  const total = cart.reduce((sum, i) => sum + i.price, 0);
+
+  const order = {
+    id: "ORD" + (orders.length + 1),
+    user: currentUser,
+    customer: { name, phone, altPhone, email, address },
+    items: [...cart],
+    total,
+    deliveryDate,
+    payment,
+    status: "Placed",
+    time: new Date().toLocaleString()
+  };
+
+  orders.push(order);
+  log(`Order placed by ${currentUser} for ${deliveryDate}`);
+
+  alert("Order placed successfully!");
+
+  cart = [];
+  products.forEach(p => p.qty = 0);
+
+  document.getElementById("orderFormSection").classList.add("hidden");
+  document.getElementById("userSection").classList.remove("hidden");
+
+  displayProducts();
+  displayCart();
+  displayMyOrders();
+}
+
+/* ------------------ MY ORDERS WITH CANCEL / MODIFY ------------------ */
+
+function displayMyOrders() {
+  const list = document.getElementById("myOrders");
+  list.innerHTML = "";
+
+  const myOrders = orders.filter(o => o.user === currentUser);
+
+  myOrders.forEach((o, index) => {
+    const canModify = canModifyOrder(o.deliveryDate);
+
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <b>Order ID:</b> ${o.id}<br>
+      Delivery Date: ${o.deliveryDate}<br>
+      Total: ₹${o.total}<br>
+      Payment: ${o.payment}<br>
+      Status: ${o.status}<br>
+      <small>Items: ${o.items.map(i => i.name).join(", ")}</small><br><br>
+
+      ${canModify ? 
+        `<button onclick="cancelOrder('${o.id}')" class="danger">Cancel Order</button>` 
+        : `<small style="color:red;">Cannot modify/cancel within 2 days of delivery</small>`
+      }
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+function canModifyOrder(deliveryDate) {
+  const today = new Date();
+  const dDate = new Date(deliveryDate);
+  const diffDays = Math.ceil((dDate - today) / (1000 * 60 * 60 * 24));
+  return diffDays > 2;
+}
+
+function cancelOrder(orderId) {
+  const order = orders.find(o => o.id === orderId);
+
+  if (!canModifyOrder(order.deliveryDate)) {
+    alert("Cannot cancel within 2 days of delivery");
+    return;
+  }
+
+  const penalty = order.total * 0.10;
+  const refund = order.total - penalty;
+
+  if (confirm(`Cancellation charge: ₹${penalty}\nRefund: ₹${refund}\nConfirm cancel?`)) {
+    order.status = "Cancelled";
+    log(`Order ${order.id} cancelled with penalty ₹${penalty}`);
+    alert("Order cancelled successfully!");
+    displayMyOrders();
+  }
+}
+
+/* ------------------ ADMIN ------------------ */
+
+function addProduct() {
+  const name = document.getElementById("pname").value;
+  const price = document.getElementById("pprice").value;
+  const category = document.getElementById("pcategory").value;
+
+  products.push({ name, price, category, items: ["Custom Item 1"], qty: 0 });
+  log(`Admin added product: ${name}`);
+  alert("Product added!");
+  displayAdminProducts();
+}
+
+function displayAdminProducts() {
+  const list = document.getElementById("adminProductList");
+  list.innerHTML = "";
+
+  products.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerText = `${i+1}. ${p.name} - ₹${p.price} (${p.category})`;
+    list.appendChild(div);
+  });
+}
+
+function displayOrders() {
+  const list = document.getElementById("orderList");
+  list.innerHTML = "";
+
+  orders.forEach(o => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <b>${o.id}</b><br>
+      User: ${o.user}<br>
+      Customer: ${o.customer.name}<br>
+      Phone: ${o.customer.phone}<br>
+      Delivery: ${o.deliveryDate}<br>
+      Total: ₹${o.total}<br>
+      Status: ${o.status}
+    `;
+    list.appendChild(div);
+  });
+}
+
+/* ------------------ HELPERS ------------------ */
+
+function usernameInput() { return document.getElementById("username").value; }
+function passwordInput() { return document.getElementById("password").value; }
+function roleInput() { return document.getElementById("role").value; }
+
+</script>
+
+</body>
+</html>
+
