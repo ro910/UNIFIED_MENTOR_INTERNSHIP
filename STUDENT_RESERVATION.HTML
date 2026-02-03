@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student–Teacher Booking Appointment</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* ================= GLOBAL STYLES ================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    width: 90%;
+    max-width: 1100px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* ================= HEADER ================= */
+header {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    color: #1e3c72;
+}
+
+/* ================= SECTIONS ================= */
+section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    margin-bottom: 15px;
+    color: #2a5298;
+}
+
+/* ================= FORMS ================= */
+input, select, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+}
+
+button {
+    background: #2a5298;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background: #1e3c72;
+}
+
+/* ================= TABLE ================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+
+th {
+    background: #2a5298;
+    color: white;
+}
+
+/* ================= STATUS ================= */
+.approved { color: green; font-weight: bold; }
+.pending { color: orange; font-weight: bold; }
+.cancelled { color: red; font-weight: bold; }
+
+/* ================= FOOTER ================= */
+footer {
+    text-align: center;
+    color: white;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+    <h1>Student–Teacher Booking Appointment System</h1>
+    <p>Internship Project | HTML • CSS • JavaScript</p>
+</header>
+
+<!-- ================= ADMIN SECTION ================= -->
+<section>
+<h2>Admin – Add Teacher</h2>
+<input type="text" id="tName" placeholder="Teacher Name">
+<input type="text" id="tDept" placeholder="Department">
+<input type="text" id="tSubject" placeholder="Subject">
+<button onclick="addTeacher()">Add Teacher</button>
+</section>
+
+<!-- ================= STUDENT SECTION ================= -->
+<section>
+<h2>Student – Book Appointment</h2>
+<input type="text" id="sName" placeholder="Student Name">
+<select id="teacherList"></select>
+<input type="datetime-local" id="apptTime">
+<textarea id="purpose" placeholder="Purpose of Appointment"></textarea>
+<button onclick="bookAppointment()">Book Appointment</button>
+</section>
+
+<!-- ================= TEACHER SECTION ================= -->
+<section>
+<h2>Teacher – View Appointments</h2>
+<table>
+<thead>
+<tr>
+<th>Student</th>
+<th>Teacher</th>
+<th>Time</th>
+<th>Purpose</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="apptTable"></tbody>
+</table>
+</section>
+
+<footer>
+    <p>© 2026 Student–Teacher Booking | Internship Project</p>
+</footer>
+
+</div>
+
+<script>
+/* ================= LOGGING MODULE ================= */
+function log(action, data) {
+    console.log(`[LOG] ${action}`, data);
+}
+
+/* ================= DATABASE (LOCAL STORAGE) ================= */
+// Firebase-ready structure
+let teachers = JSON.parse(localStorage.getItem("teachers")) || [];
+let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+
+/* ================= ADMIN FUNCTIONS ================= */
+function addTeacher() {
+    const name = tName.value;
+    const dept = tDept.value;
+    const subject = tSubject.value;
+
+    if (!name || !dept || !subject) {
+        alert("Fill all teacher details");
+        return;
+    }
+
+    const teacher = { id: Date.now(), name, dept, subject };
+    teachers.push(teacher);
+    localStorage.setItem("teachers", JSON.stringify(teachers));
+
+    log("Teacher Added", teacher);
+    loadTeachers();
+    alert("Teacher Added Successfully");
+}
+
+/* ================= STUDENT FUNCTIONS ================= */
+function loadTeachers() {
+    teacherList.innerHTML = "<option>Select Teacher</option>";
+    teachers.forEach(t => {
+        teacherList.innerHTML += `<option value="${t.name}">
+            ${t.name} - ${t.subject}
+        </option>`;
+    });
+}
+
+function bookAppointment() {
+    const appt = {
+        id: Date.now(),
+        student: sName.value,
+        teacher: teacherList.value,
+        time: apptTime.value,
+        purpose: purpose.value,
+        status: "Pending"
+    };
+
+    if (!appt.student || appt.teacher === "Select Teacher") {
+        alert("Complete all fields");
+        return;
+    }
+
+    appointments.push(appt);
+    localStorage.setItem("appointments", JSON.stringify(appointments));
+
+    log("Appointment Booked", appt);
+    renderAppointments();
+    alert("Appointment Requested");
+}
+
+/* ================= TEACHER FUNCTIONS ================= */
+function renderAppointments() {
+    apptTable.innerHTML = "";
+    appointments.forEach(a => {
+        apptTable.innerHTML += `
+        <tr>
+            <td>${a.student}</td>
+            <td>${a.teacher}</td>
+            <td>${a.time}</td>
+            <td>${a.purpose}</td>
+            <td class="${a.status.toLowerCase()}">${a.status}</td>
+            <td>
+                <button onclick="updateStatus(${a.id}, 'Approved')">Approve</button>
+                <button onclick="updateStatus(${a.id}, 'Cancelled')">Cancel</button>
+            </td>
+        </tr>`;
+    });
+}
+
+function updateStatus(id, status) {
+    appointments = appointments.map(a => {
+        if (a.id === id) a.status = status;
+        return a;
+    });
+
+    localStorage.setItem("appointments", JSON.stringify(appointments));
+    log("Appointment Status Updated", { id, status });
+    renderAppointments();
+}
+
+/* ================= INIT ================= */
+loadTeachers();
+renderAppointments();
+</script>
+
+</body>
+</html>
