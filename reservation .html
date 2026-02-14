@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Advanced Student–Teacher Booking System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+color:#333;
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:#fff;
+padding:20px;
+border-radius:15px;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+margin-bottom:20px;
+}
+
+h2{
+color:#2c5364;
+}
+
+input,select,textarea,button{
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+background:#2c5364;
+color:white;
+border:none;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:15px;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:8px;
+text-align:center;
+}
+
+th{
+background:#2c5364;
+color:white;
+}
+
+.approved{color:green;font-weight:bold;}
+.pending{color:orange;font-weight:bold;}
+.cancelled{color:red;font-weight:bold;}
+
+.hidden{
+display:none;
+}
+
+.logout{
+float:right;
+background:#c0392b;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- LOGIN SECTION -->
+<div id="loginSection" class="card">
+<h2>Login</h2>
+
+<select id="role">
+<option value="admin">Admin</option>
+<option value="teacher">Teacher</option>
+<option value="student">Student</option>
+</select>
+
+<input type="text" id="username" placeholder="Enter Your Name">
+<button onclick="login()">Login</button>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="adminSection" class="hidden">
+<div class="card">
+<button class="logout" onclick="logout()">Logout</button>
+<h2>Admin Dashboard</h2>
+<div id="adminStats"></div>
+
+<h3>Add Teacher</h3>
+<input type="text" id="tName" placeholder="Teacher Name">
+<input type="text" id="tDept" placeholder="Department">
+<input type="text" id="tSubject" placeholder="Subject">
+<button onclick="addTeacher()">Add Teacher</button>
+
+<table id="teacherTable"></table>
+</div>
+</div>
+
+<!-- STUDENT DASHBOARD -->
+<div id="studentSection" class="hidden">
+<div class="card">
+<button class="logout" onclick="logout()">Logout</button>
+<h2>Student Dashboard</h2>
+
+<select id="teacherList"></select>
+<input type="datetime-local" id="apptTime">
+<textarea id="purpose" placeholder="Purpose"></textarea>
+<button onclick="bookAppointment()">Book Appointment</button>
+
+<table id="studentAppointments"></table>
+</div>
+</div>
+
+<!-- TEACHER DASHBOARD -->
+<div id="teacherSection" class="hidden">
+<div class="card">
+<button class="logout" onclick="logout()">Logout</button>
+<h2>Teacher Dashboard</h2>
+
+<table id="teacherAppointments"></table>
+</div>
+</div>
+
+</div>
+
+<script>
+
+// DATABASE
+let teachers = JSON.parse(localStorage.getItem("teachers")) || [];
+let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+
+// AUTH
+function login(){
+const role=document.getElementById("role").value;
+const username=document.getElementById("username").value;
+
+if(!username){
+alert("Enter your name");
+return;
+}
+
+localStorage.setItem("currentUser",JSON.stringify({role,username}));
+showDashboard();
+}
+
+function logout(){
+localStorage.removeItem("currentUser");
+location.reload();
+}
+
+function showDashboard(){
+const user=JSON.parse(localStorage.getItem("currentUser"));
+if(!user) return;
+
+document.getElementById("loginSection").classList.add("hidden");
+
+if(user.role==="admin"){
+document.getElementById("adminSection").classList.remove("hidden");
+renderTeachers();
+renderAdminStats();
+}
+if(user.role==="student"){
+document.getElementById("studentSection").classList.remove("hidden");
+loadTeachers();
+renderStudentAppointments();
+}
+if(user.role==="teacher"){
+document.getElementById("teacherSection").classList.remove("hidden");
+renderTeacherAppointments();
+}
+}
+
+// ADMIN FUNCTIONS
+function addTeacher(){
+const name=tName.value;
+const dept=tDept.value;
+const subject=tSubject.value;
+
+if(!name||!dept||!subject){
+alert("Fill all fields");
+return;
+}
+
+teachers.push({id:Date.now(),name,dept,subject});
+localStorage.setItem("teachers",JSON.stringify(teachers));
+
+tName.value="";
+tDept.value="";
+tSubject.value="";
+
+renderTeachers();
+renderAdminStats();
+}
+
+function deleteTeacher(id){
+teachers=teachers.filter(t=>t.id!==id);
+localStorage.setItem("teachers",JSON.stringify(teachers));
+renderTeachers();
+renderAdminStats();
+}
+
+function renderTeachers(){
+teacherTable.innerHTML=
+`<tr>
+<th>Name</th>
+<th>Dept</th>
+<th>Subject</th>
+<th>Action</th>
+</tr>`;
+
+teachers.forEach(t=>{
+teacherTable.innerHTML+=
+`<tr>
+<td>${t.name}</td>
+<td>${t.dept}</td>
+<td>${t.subject}</td>
+<td><button onclick="deleteTeacher(${t.id})">Delete</button></td>
+</tr>`;
+});
+}
+
+function renderAdminStats(){
+adminStats.innerHTML=
+`<p>Total Teachers: ${teachers.length}</p>
+<p>Total Appointments: ${appointments.length}</p>`;
+}
+
+// STUDENT FUNCTIONS
+function loadTeachers(){
+teacherList.innerHTML="<option>Select Teacher</option>";
+teachers.forEach(t=>{
+teacherList.innerHTML+=
+`<option value="${t.name}">${t.name} - ${t.subject}</option>`;
+});
+}
+
+function bookAppointment(){
+const user=JSON.parse(localStorage.getItem("currentUser"));
+const teacher=teacherList.value;
+const time=apptTime.value;
+const purposeText=purpose.value;
+
+if(!teacher||teacher==="Select Teacher"||!time){
+alert("Complete all fields");
+return;
+}
+
+const conflict=appointments.find(a=>a.teacher===teacher&&a.time===time);
+
+if(conflict){
+alert("Slot already booked!");
+return;
+}
+
+appointments.push({
+id:Date.now(),
+student:user.username,
+teacher,
+time,
+purpose:purposeText,
+status:"Pending"
+});
+
+localStorage.setItem("appointments",JSON.stringify(appointments));
+
+renderStudentAppointments();
+}
+
+function renderStudentAppointments(){
+const user=JSON.parse(localStorage.getItem("currentUser"));
+studentAppointments.innerHTML=
+`<tr>
+<th>Teacher</th>
+<th>Time</th>
+<th>Status</th>
+<th>Action</th>
+</tr>`;
+
+appointments
+.filter(a=>a.student===user.username)
+.forEach(a=>{
+studentAppointments.innerHTML+=
+`<tr>
+<td>${a.teacher}</td>
+<td>${a.time}</td>
+<td class="${a.status.toLowerCase()}">${a.status}</td>
+<td><button onclick="cancelAppointment(${a.id})">Cancel</button></td>
+</tr>`;
+});
+}
+
+function cancelAppointment(id){
+appointments=appointments.map(a=>{
+if(a.id===id) a.status="Cancelled";
+return a;
+});
+localStorage.setItem("appointments",JSON.stringify(appointments));
+renderStudentAppointments();
+}
+
+// TEACHER FUNCTIONS
+function renderTeacherAppointments(){
+const user=JSON.parse(localStorage.getItem("currentUser"));
+
+teacherAppointments.innerHTML=
+`<tr>
+<th>Student</th>
+<th>Time</th>
+<th>Purpose</th>
+<th>Status</th>
+<th>Action</th>
+</tr>`;
+
+appointments
+.filter(a=>a.teacher===user.username)
+.forEach(a=>{
+teacherAppointments.innerHTML+=
+`<tr>
+<td>${a.student}</td>
+<td>${a.time}</td>
+<td>${a.purpose}</td>
+<td class="${a.status.toLowerCase()}">${a.status}</td>
+<td>
+<button onclick="updateStatus(${a.id},'Approved')">Approve</button>
+<button onclick="updateStatus(${a.id},'Cancelled')">Reject</button>
+</td>
+</tr>`;
+});
+}
+
+function updateStatus(id,status){
+appointments=appointments.map(a=>{
+if(a.id===id) a.status=status;
+return a;
+});
+localStorage.setItem("appointments",JSON.stringify(appointments));
+renderTeacherAppointments();
+}
+
+// INIT
+showDashboard();
+
+</script>
+
+</body>
+</html>
