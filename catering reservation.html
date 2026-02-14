@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Catering Reservation and Ordering System</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: #f5f7fa;
+}
+
+/* HEADER */
+header {
+  background: linear-gradient(90deg, #ff6a00, #ee0979);
+  color: white;
+  padding: 20px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: bold;
+}
+
+/* HERO */
+.hero {
+  height: 250px;
+  background: url("https://images.unsplash.com/photo-1555244162-803834f70033") center/cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+}
+
+.hero-content {
+  background: rgba(0,0,0,0.6);
+  padding: 20px 40px;
+  border-radius: 10px;
+}
+
+/* CONTAINER */
+.container {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+/* GRID */
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+/* IMAGE */
+.product-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+/* INPUT */
+input, select, textarea {
+  padding: 10px;
+  margin: 8px 0;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* BUTTON */
+button {
+  padding: 8px 14px;
+  background: linear-gradient(90deg, #ff6a00, #ee0979);
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.danger {
+  background: #e74c3c;
+}
+
+.success {
+  background: #27ae60;
+}
+
+.badge {
+  background: #ff6a00;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.log {
+  background: black;
+  color: #00ff00;
+  padding: 10px;
+  height: 150px;
+  overflow-y: auto;
+  border-radius: 8px;
+}
+
+.hidden {
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  Catering Reservation and Ordering System
+</header>
+
+<div class="hero">
+  <div class="hero-content">
+    <h1>Delicious Catering for Every Occasion</h1>
+    <p>Wedding • Birthday • Corporate • Family Events</p>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- AUTH -->
+<div id="authSection">
+  <h2>Login / Register</h2>
+  <select id="role">
+    <option value="user">User</option>
+    <option value="admin">Admin</option>
+  </select>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <button onclick="register()">Register</button>
+</div>
+
+<!-- USER -->
+<div id="userSection" class="hidden">
+  <div class="topbar">
+    <div>Welcome, <b id="userNameLabel"></b></div>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <h2>User Dashboard</h2>
+
+  <div class="row">
+    <div>
+      <h3>Available Catering Products</h3>
+      <div id="productList"></div>
+    </div>
+
+    <div>
+      <h3>My Cart <span class="badge" id="cartCount">0</span></h3>
+      <div id="cartList"></div>
+      <h4>Total: ₹<span id="totalAmount">0</span></h4>
+      <button onclick="openOrderForm()">Proceed to Checkout</button>
+    </div>
+  </div>
+
+  <h3>My Orders</h3>
+  <div id="myOrders"></div>
+</div>
+
+<!-- ORDER FORM -->
+<div id="orderFormSection" class="hidden">
+  <h2>Delivery Details</h2>
+  <input type="text" id="custName" placeholder="Full Name">
+  <input type="text" id="custPhone" placeholder="Phone">
+  <textarea id="custAddress" placeholder="Address"></textarea>
+  <input type="date" id="deliveryDate">
+  <select id="paymentMethod">
+    <option value="">Select Payment</option>
+    <option>Cash On Delivery</option>
+    <option>UPI</option>
+    <option>Card</option>
+  </select>
+  <button onclick="confirmOrder()">Place Order</button>
+  <button onclick="backToDashboard()" class="danger">Cancel</button>
+</div>
+
+<!-- ADMIN -->
+<div id="adminSection" class="hidden">
+  <div class="topbar">
+    <div><b>Admin Dashboard</b></div>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <h3>Add Product</h3>
+  <input type="text" id="pname" placeholder="Product Name">
+  <input type="number" id="pprice" placeholder="Price">
+  <select id="pcategory">
+    <option>Breakfast</option>
+    <option>Lunch</option>
+    <option>Dinner</option>
+    <option>Snacks</option>
+  </select>
+  <button onclick="addProduct()">Add</button>
+
+  <h3>All Orders</h3>
+  <div id="orderList"></div>
+</div>
+
+<h3>System Logs</h3>
+<div class="log" id="logBox"></div>
+
+</div>
+
+<script>
+
+/* DATA */
+let users = [
+  { username: "user", password: "1234", role: "user" },
+  { username: "admin", password: "1234", role: "admin" }
+];
+
+let products = [
+  { name: "South Indian Breakfast", price: 120, category: "Breakfast", image:"https://images.unsplash.com/photo-1589308078056-fb6c7a35e3d6", qty:0 },
+  { name: "Veg Meals", price: 180, category: "Lunch", image:"https://images.unsplash.com/photo-1604908177522-402db21fce6b", qty:0 },
+  { name: "Chicken Biryani", price: 220, category: "Lunch", image:"https://images.unsplash.com/photo-1600891964599-f61ba0e24092", qty:0 },
+  { name: "Evening Snacks", price: 90, category: "Snacks", image:"https://images.unsplash.com/photo-1599785209707-28a03db35f1d", qty:0 }
+];
+
+let cart = [];
+let orders = [];
+let currentUser = null;
+let currentRole = null;
+
+/* LOG */
+function log(msg){
+  document.getElementById("logBox").innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
+}
+
+/* AUTH */
+function register(){
+  users.push({username:username.value,password:password.value,role:role.value});
+  alert("Registered!");
+}
+
+function login(){
+  const user = users.find(u=>u.username===username.value && u.password===password.value && u.role===role.value);
+  if(!user){alert("Invalid");return;}
+  currentUser=user.username;
+  currentRole=user.role;
+  authSection.classList.add("hidden");
+  if(user.role==="user"){
+    userSection.classList.remove("hidden");
+    userNameLabel.innerText=currentUser;
+    displayProducts();
+  }else{
+    adminSection.classList.remove("hidden");
+    displayOrders();
+  }
+}
+
+function logout(){
+  location.reload();
+}
+
+/* PRODUCTS */
+function displayProducts(){
+  productList.innerHTML="";
+  products.forEach((p,i)=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <img src="${p.image}" class="product-img">
+      <h4>${p.name}</h4>
+      <p>₹${p.price}</p>
+      <button onclick="addToCart(${i})">Add to Cart</button>
+    `;
+    productList.appendChild(div);
+  });
+}
+
+function addToCart(i){
+  cart.push(products[i]);
+  displayCart();
+}
+
+function removeFromCart(index){
+  cart.splice(index,1);
+  displayCart();
+}
+
+function displayCart(){
+  cartList.innerHTML="";
+  let total=0;
+  cart.forEach((c,i)=>{
+    total+=c.price;
+    cartList.innerHTML+=`
+      <div class="card">
+        ${c.name} - ₹${c.price}
+        <button onclick="removeFromCart(${i})" class="danger">Remove</button>
+      </div>`;
+  });
+  cartCount.innerText=cart.length;
+  totalAmount.innerText=total;
+}
+
+/* ORDER */
+function openOrderForm(){
+  if(cart.length===0){alert("Cart empty");return;}
+  userSection.classList.add("hidden");
+  orderFormSection.classList.remove("hidden");
+}
+
+function backToDashboard(){
+  orderFormSection.classList.add("hidden");
+  userSection.classList.remove("hidden");
+}
+
+function confirmOrder(){
+  const dDate=new Date(deliveryDate.value);
+  if(!custName.value||!custPhone.value||!custAddress.value||!deliveryDate.value||!paymentMethod.value){
+    alert("Fill all");return;
+  }
+  const total=cart.reduce((sum,i)=>sum+i.price,0);
+  orders.push({
+    id:"ORD"+(orders.length+1),
+    user:currentUser,
+    total,
+    deliveryDate:deliveryDate.value,
+    payment:paymentMethod.value,
+    status:"Placed"
+  });
+  log("Order placed");
+  cart=[];
+  backToDashboard();
+  displayCart();
+  displayMyOrders();
+}
+
+function displayMyOrders(){
+  myOrders.innerHTML="";
+  orders.filter(o=>o.user===currentUser).forEach(o=>{
+    const canCancel=canCancelOrder(o.deliveryDate);
+    myOrders.innerHTML+=`
+      <div class="card">
+        ${o.id} | Delivery: ${o.deliveryDate} | ₹${o.total} | ${o.status}
+        ${canCancel && o.status==="Placed" ? `<button onclick="cancelOrder('${o.id}')" class="danger">Cancel</button>`:""}
+      </div>`;
+  });
+}
+
+function canCancelOrder(date){
+  const diff=(new Date(date)-new Date())/(1000*60*60*24);
+  return diff>7;
+}
+
+function cancelOrder(id){
+  const order=orders.find(o=>o.id===id);
+  if(!canCancelOrder(order.deliveryDate)){alert("Cannot cancel within 7 days");return;}
+  order.status="Cancelled";
+  log("Order cancelled");
+  displayMyOrders();
+}
+
+/* ADMIN */
+function addProduct(){
+  products.push({name:pname.value,price:Number(pprice.value),category:pcategory.value,image:"https://images.unsplash.com/photo-1600891964599-f61ba0e24092",qty:0});
+  alert("Added");
+}
+
+function displayOrders(){
+  orderList.innerHTML="";
+  orders.forEach(o=>{
+    orderList.innerHTML+=`
+      <div class="card">
+        ${o.id} | User: ${o.user} | ₹${o.total} | ${o.status}
+      </div>`;
+  });
+}
+
+</script>
+
+</body>
+</html>
